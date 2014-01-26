@@ -22,18 +22,21 @@ LifeGame class >> initialize [
 
 { #category : #'as yet unclassified' }
 LifeGame class >> play [
-	| window game button |
-	window := SystemWindow labelled: 'Conway''s Game of Life'.
-	game := LifeGame rows: 35 columns: 35.
-	window model: game.
-	"window extent: game extent."
-	button := SimpleButtonMorph new 
-		label: 'next';
-		target: game;
-		actionSelector: #nextGen.
-	window addMorph: game frame: (0@0 corner: 0.8@1).
-	window addMorph: button frame: (0.85@0.1 corner: 0.9@0.2).
-	window openInWorld
+	| builder content game |
+	builder := UITheme builder.
+	
+	content := builder newColumn: {
+		game := LifeGame rows: 35 columns: 35.
+		builder newRow: {
+			builder newButtonFor: game action: #nextGen getEnabled: nil label: 'next' help:'to compute and display the next state'.
+			builder newButtonFor: game action: #startStepping getEnabled: nil label: 'play' help:'do ''next'' until the board stops moving.'.
+			builder newButtonFor: game action: #stopStepping getEnabled: nil label: 'stop' help:'interrupt when playing'.
+			builder newButtonFor: game action: #clear getEnabled: nil label: 'clear' help:'reset the board' 
+		}.
+	}.
+	(content openInWindowLabeled: 'Conway''s Game of Life') extent: 436@496.
+	(game isStepping) ifTrue: [ game stopStepping ].
+	game takeKeyboardFocus 
 ]
 
 { #category : #'as yet unclassified' }
@@ -50,6 +53,12 @@ LifeGame class >> sortCollectionOfPoints: aCollOfPoints [
 { #category : #accessing }
 LifeGame >> at: aRow at: aColumn [
 	^ cells at: aRow at: aColumn
+]
+
+{ #category : #evaluating }
+LifeGame >> clear [
+
+	cells do: [ :each | each turnOff ]
 ]
 
 { #category : #accessing }
@@ -78,6 +87,13 @@ LifeGame >> defaultCellsPerSide [
 	^ 48
 ]
 
+{ #category : #'as yet unclassified ' }
+LifeGame >> handleKeystroke: anEvent [ 
+	| keyValue |
+	keyValue := anEvent keyValue.
+	Transcript show: keyValue; cr.
+]
+
 { #category : #initialization }
 LifeGame >> initialize [
 
@@ -92,9 +108,9 @@ LifeGame >> initialize [
 	cells := Matrix rows: self rows columns: self columns tabulate: [ :i :j | self newCellAt: i at: j ].
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #neighbours }
 LifeGame >> neighboursPositionsAt: i at: j [
-"
+"returns all the neighbours coordinates in the form of a collection of points.
 _|_|_
 _|_|_
 _|_|_
@@ -123,17 +139,19 @@ LifeGame >> newCellAt: row at: column [
 
 { #category : #evaluating }
 LifeGame >> nextGen [
-	| oldGen |
-	oldGen := self veryDeepCopy.
+	| changedCells |
+	changedCells := OrderedCollection new.
 	cells withIndicesDo: [ :cell :column :row | | c | "not sure why I receive column then row here..."
-		c := oldGen countAliveNeighboursAt: row at: column.
-		c < 2 ifTrue: [ cell turnOff ] 		"under-population"
+		c := self countAliveNeighboursAt: row at: column.
+		c < 2 ifTrue: [ cell isOn ifTrue: [ changedCells add: cell ] ] 	"under-population"
 			   ifFalse: [ 
-				"(c <= 3 and: [ cell isOn ]) ifTrue: [ cell turnOn ]" "surviving - no op"
-				c > 3 ifTrue: [ cell turnOff ] "overcrowding"
-					   ifFalse: [ c = 3 ifTrue: [ cell turnOn ] ] "reproduction"
+				"(c <= 3 and: [ cell isOn ]) ifTrue: [ cell turnOn ]" 	"surviving - no op"
+				c > 3 ifTrue: [ cell isOn ifTrue: [ changedCells add: cell ] ] "overcrowding"
+					   ifFalse: [ c = 3 ifTrue: [ cell isOn ifFalse: [ changedCells add: cell ] ] ] "reproduction"
 			   ]
-		]
+		].
+	changedCells do: [ :each | each toggleState ].
+	^ changedCells size
 ]
 
 { #category : #accessing }
@@ -144,4 +162,22 @@ LifeGame >> rows [
 { #category : #accessing }
 LifeGame >> rows: anObject [
 	rows := anObject
+]
+
+{ #category : #evaluating }
+LifeGame >> stabilize: maxIterations [
+	"loop on #nextGen until it stops moving"
+	| flipped c |
+	c := 0.
+	[ c < maxIterations and: [ flipped = 0 ] ] whileFalse: [ c := c + 1. flipped := self nextGen. self refreshWorld ]
+]
+
+{ #category : #'stepping and presenter' }
+LifeGame >> step [ 
+	self nextGen
+]
+
+{ #category : #testing }
+LifeGame >> stepTime [
+	^1000
 ]
