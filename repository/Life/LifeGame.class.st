@@ -105,7 +105,7 @@ LifeGame >> initialize [
 	cellWidth := sampleCell width.
 	cellHeight := sampleCell height.
 	self extent: ((cellWidth * w)@(cellHeight * h)) + (2 * self borderWidth).
-	cells := Matrix rows: self rows columns: self columns tabulate: [ :i :j | self newCellAt: i at: j ].
+	cells := Array2D rows: self rows columns: self columns tabulate: [ :i :j | self newCellAt: i at: j ].
 ]
 
 { #category : #neighbours }
