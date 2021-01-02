@@ -36,9 +36,9 @@ LifeGameTest >> testOvercrowding [
 	(game at: 1 at: 3) turnOn. "2 neighbours alive"
 	(game at: 3 at: 1) turnOn. "3 neighbours alive"
 	(game at: 3 at: 3) turnOn. "4 neighbours alive"
-	self assert: (game countAliveNeighboursAt: 2 at: 2) > 3.
+	self assert: [(game countAliveNeighboursAt: 2 at: 2) > 3].
 	game nextGen.
-	self assert: (game at: 2 at: 2) isOff.
+	self assert: [(game at: 2 at: 2) isOn not].
 	game delete.
 	
 	"ensure dead cells remain dead under such circumstances"
@@ -48,9 +48,9 @@ LifeGameTest >> testOvercrowding [
 	(game at: 1 at: 3) turnOn. "2 neighbours alive"
 	(game at: 3 at: 1) turnOn. "3 neighbours alive"
 	(game at: 3 at: 3) turnOn. "4 neighbours alive"
-	self assert: (game countAliveNeighboursAt: 2 at: 2) > 3.
+	self assert: [(game countAliveNeighboursAt: 2 at: 2) > 3].
 	game nextGen.
-	self assert: (game at: 2 at: 2) isOff.
+	self assert: [(game at: 2 at: 2) isOn not].
 	game delete.
 ]
 
@@ -65,7 +65,7 @@ LifeGameTest >> testReproduction [
 	(game at: 1 at: 3) turnOn. "2 neighbours alive"
 	(game at: 3 at: 1) turnOn. "3 neighbours alive"
 	game nextGen.
-	self assert: (game at: 2 at: 2) isOn.
+	self assert: [(game at: 2 at: 2) isOn].
 	game delete.
 	
 	"ensure alive cell stay alive ...ah ah ah ah stay aliiiiiive"
@@ -75,7 +75,7 @@ LifeGameTest >> testReproduction [
 	(game at: 1 at: 3) turnOn. "2 neighbours alive"
 	(game at: 3 at: 1) turnOn. "3 neighbours alive"
 	game nextGen.
-	self assert: (game at: 2 at: 2) isOn.
+	self assert: [(game at: 2 at: 2) isOn].
 	game delete.
 ]
 
@@ -89,7 +89,7 @@ LifeGameTest >> testSurviving [
 	(game at: 1 at: 2) turnOn. "1 neighbour alive"
 	(game at: 3 at: 2) turnOn. "2 neighbours alive"
 	game nextGen.
-	self assert: (game at: 2 at: 2) isOn.
+	self assert: [ (game at: 2 at: 2) isOn ].
 	game delete.
 	
 	"ensure it only occur to live cells"
@@ -98,7 +98,7 @@ LifeGameTest >> testSurviving [
 	(game at: 1 at: 2) turnOn. "1 neighbour alive"
 	(game at: 3 at: 2) turnOn. "2 neighbours alive"
 	game nextGen.
-	self assert: (game at: 2 at: 2) isOff.
+	self assert: [ (game at: 2 at: 2) isOn not ].
 	game delete.
 ]
 
@@ -110,12 +110,12 @@ LifeGameTest >> testUnderPopulation [
 	game := LifeGame rows: 3 columns: 3.
 	(game at: 2 at: 2) turnOn.
 	game nextGen.
-	self assert: (game at: 2 at: 2) isOff.
+	self assert: [ (game at: 2 at: 2) isOn not ].
 	game delete.
 	"ensure dead cells remain dead under similar circumstances"
 	game := LifeGame rows: 3 columns: 3.
 	(game at: 2 at: 2) turnOff.
 	game nextGen.
-	self assert: (game at: 2 at: 2) isOff.
+	self assert: [ (game at: 2 at: 2) isOn ].
 	game delete.
 ]
